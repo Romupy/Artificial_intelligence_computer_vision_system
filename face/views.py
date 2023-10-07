@@ -13,6 +13,7 @@ def face(request):
     Keyword arguments:
     request -- (django.http.HttpRequest) The HttpRequest object containing all
     information about HTTP request.
+
     Returns:
     django.http.HttpResponse -- An HttpResponse object representing the view
     response

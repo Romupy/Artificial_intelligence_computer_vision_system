@@ -8,9 +8,13 @@ class Face:
         """
         Method that detects faces in an image
 
+        This method saves the image, with the boundary representing the
+        detected face, and returns the number of faces detected.
+
         Keyword arguments:
         image -- (django.core.files.uploadedfile.InMemoryUploadedFile) The
         image to be analyzed
+
         Returns:
         int -- The number of faces detected
         """
