@@ -11,9 +11,11 @@ def face(request):
     View that enables image reception and recording
 
     Keyword arguments:
-    request -- (django.http.HttpRequest) The HttpRequest object containing all information about HTTP request.
+    request -- (django.http.HttpRequest) The HttpRequest object containing all
+    information about HTTP request.
     Returns:
-    django.http.HttpResponse -- An HttpResponse object representing the view response
+    django.http.HttpResponse -- An HttpResponse object representing the view
+    response
     """
     serializer = ImageSerializer(data=request.data)
     if serializer.is_valid():
