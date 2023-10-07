@@ -1,4 +1,5 @@
 from django.db import models
+from .face import Face
 
 
 class Image(models.Model):
@@ -8,3 +9,8 @@ class Image(models.Model):
 
     def __str__(self):
         return self.image.name
+
+    def analyze(self):
+        face = Face()
+        self.faces = face.face_detection(self.image)
+        return {"Number of faces detected": self.faces}
