@@ -27,7 +27,7 @@ class Face:
         black_and_white = cv2.equalizeHist(gray)
         faces = face_cascade.detectMultiScale(
             black_and_white,
-            scaleFactor=1.1, minNeighbors=5,
+            scaleFactor=1.45, minNeighbors=5,
             minSize=(30, 30),
             flags=cv2.CASCADE_SCALE_IMAGE
         )
