@@ -8,9 +8,9 @@ class Image(models.Model):
     faces = models.IntegerField(default=0)
 
     def __str__(self):
-        return self.image.name
+        return {"image_name": self.image.name}
 
     def analyze(self):
-        face = Face()
-        self.faces = face.face_detection(self.image)
+        face = Face(self.image.name)
+        self.faces = face.face_detection()
         return {"Number of faces detected": self.faces}
