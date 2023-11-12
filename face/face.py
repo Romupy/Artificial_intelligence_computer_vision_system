@@ -10,17 +10,17 @@ class Face:
 
     def face_detection(self):
         """
-        Method that detects faces in an image
+        Method that detects faces in an image.
 
-        This method saves the image, the edge of which represents the detected
-        face, and returns features relating to this image.
-
-        Keyword arguments:
-        image -- (django.core.files.uploadedfile.InMemoryUploadedFile) The
-        image to be analyzed
+        This method utilizes a Haar Cascade classifier to detect faces in the
+        provided image.
+        Detected faces are processed to remove rectangles containing others,
+        and the remaining rectangles are analyzed for facial skin brightness.
 
         Returns:
-        int -- The number of faces detected
+        dict -- Dictionary containing the number of faces detected and
+        information about the facial skin.
+        Example: {'Number_of_faces_detected': 2, 'facial_skin': [...]}
         """
         cascade_path = os.path.abspath(
             'face/classifiers/haarcascade_frontalface_default.xml'
@@ -32,12 +32,14 @@ class Face:
         gray_image_name = "images/" + str(uuid.uuid4()) + img_extension.lower()
         cv2.imwrite(gray_image_name, gray)
         black_and_white = cv2.equalizeHist(gray)
-        faces = face_cascade.detectMultiScale(
+        faces_detected = face_cascade.detectMultiScale(
             black_and_white,
             scaleFactor=1.45, minNeighbors=5,
             minSize=(30, 30),
             flags=cv2.CASCADE_SCALE_IMAGE
         )
+        sorted_faces = sorted(faces_detected, key=lambda x: x[2] * x[3], reverse=True)
+        faces = self.__remove_double_detection(sorted_faces)
         skin_brightness = []
         for x, y, w, h in faces:
             coordinates = {'x': x, 'y': y}
@@ -54,22 +56,24 @@ class Face:
     @staticmethod
     def __skin_brightness_detection(coordinates, sizes, gray_image_name):
         """
-        A method that detects facial skin brightness.
+       Method that detects facial skin brightness.
 
-        This method analyzes the brightness of facial skin in the specified
-        region of the grayscale image.
+       This method analyzes the brightness of facial skin in the specified
+       region of the grayscale image.
 
-        Keyword arguments:
-        coordinates -- Dictionary containing the 'x' and 'y' coordinates of
-        the region.
-        sizes -- Dictionary containing the width ('w') and height ('h') of
-        the region.
-        gray_image_name -- The file path of the grayscale image to be analyzed.
+       Keyword arguments:
+       coordinates (dict): Dictionary containing the 'x' and 'y' coordinates of
+       the region.
+       sizes (dict): Dictionary containing the width ('w') and height ('h') of
+       the region.
+       gray_image_name (str): The file path of the grayscale image to be
+       analyzed.
 
-        Returns:
-        float -- The brightness of the facial skin in the specified region,
-        rounded to two decimal places.
-        """
+       Returns:
+        dict: A dictionary containing the brightness of the facial skin in the
+        specified region rounded to two decimal places and skin information.
+        Example: {'skin_brightness': 0.75, 'skin_info': 'light skin'}
+       """
         img = cv2.imread(gray_image_name)
         distance = int(sizes['h'] / 2)
         ordinate = [
@@ -91,12 +95,58 @@ class Face:
                     int(img[coords_pixel['y'], coords_pixel['x']][0])
                 )
         result = round(((100 / 255) * median(brightness_data)) / 100, 2)
-        if 0 < result < 0.42:
-            skin_info = "dark skin"
-        elif 0.42 <= result <= 0.60:
-            skin_info = "matte skin"
-        elif 0.60 < result:
-            skin_info = "light skin"
-        else:
-            skin_info = "no skin"
+        skin_info = Face.__skin_type_detection(result)
         return {"skin_brightness": result, "skin_info": skin_info}
+
+    @staticmethod
+    def __skin_type_detection(result):
+        """
+        Method that detects the type of facial skin based on brightness result.
+
+        Keyword arguments:
+        result (float): The brightness result of the facial skin in the
+        specified region.
+
+        Returns:
+        str: String indicating the detected type of facial skin.
+        Possible values: 'dark skin', 'matte skin', 'light skin', 'no skin'.
+        """
+        if 0 < result < 0.42:
+            return "dark skin"
+        elif 0.42 <= result <= 0.60:
+            return "matte skin"
+        elif 0.60 < result:
+            return "light skin"
+        return "no skin"
+
+    @staticmethod
+    def __remove_double_detection(rectangles):
+        """
+        Method that removes double detection, the method that removes
+        rectangles containing others from the list.
+
+        This method takes a list of rectangles represented as tuples
+        (x, y, w, h).
+        It removes rectangles that contain other rectangles.
+
+        Keyword arguments:
+        rectangles -- List of rectangles to be processed.
+                      Represented as tuples (x, y, w, h).
+
+        Returns:
+        List -- List of rectangles that do not contain any other rectangles.
+        """
+        retained_rectangles = []
+        for i in range(len(rectangles)):
+            x_i, y_i, w_i, h_i = rectangles[i]
+            is_contained = False
+            for j in range(len(rectangles)):
+                if i != j:
+                    x_j, y_j, w_j, h_j = rectangles[j]
+                    if (x_i <= x_j and y_i <= y_j and x_i + w_i >= x_j + w_j
+                            and y_i + h_i >= y_j + h_j):
+                        is_contained = True
+                        break
+            if not is_contained:
+                retained_rectangles.append((x_i, y_i, w_i, h_i))
+        return retained_rectangles
