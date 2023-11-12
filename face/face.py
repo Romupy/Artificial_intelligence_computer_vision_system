@@ -48,8 +48,8 @@ class Face:
             )
             skin_brightness.append(skin_brightness_result)
         cv2.imwrite(self.image_name, img)
-        return {"Number of faces detected": len(faces),
-                "skin brightness ": skin_brightness}
+        return {"Number_of_faces_detected": len(faces),
+                "facial_skin": skin_brightness}
 
     @staticmethod
     def __skin_brightness_detection(coordinates, sizes, gray_image_name):
@@ -90,4 +90,13 @@ class Face:
                 brightness_data.append(
                     int(img[coords_pixel['y'], coords_pixel['x']][0])
                 )
-        return round(((100 / 255) * median(brightness_data)) / 100, 2)
+        result = round(((100 / 255) * median(brightness_data)) / 100, 2)
+        if 0 < result < 0.42:
+            skin_info = "dark skin"
+        elif 0.42 <= result <= 0.60:
+            skin_info = "matte skin"
+        elif 0.60 < result:
+            skin_info = "light skin"
+        else:
+            skin_info = "no skin"
+        return {"skin_brightness": result, "skin_info": skin_info}

@@ -12,5 +12,4 @@ class Image(models.Model):
 
     def analyze(self):
         face = Face(self.image.name)
-        self.faces = face.face_detection()
-        return {"Number of faces detected": self.faces}
+        return face.face_detection()
