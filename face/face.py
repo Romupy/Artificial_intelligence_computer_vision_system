@@ -1,4 +1,6 @@
 import os
+import time
+
 import cv2
 import uuid
 from statistics import median
@@ -46,6 +48,7 @@ class Face:
         information about the facial skin.
         Example: {'Number_of_faces_detected': 2, 'facial_skin': [...]}
         """
+        gray = None
         cascade_paths = [
             os.path.abspath('face/classifiers/haarcascade_frontalface_default.xml'),
             os.path.abspath('face/classifiers/haarcascade_frontalface_alt_tree.xml'),
@@ -53,23 +56,65 @@ class Face:
             os.path.abspath('face/classifiers/haarcascade_profileface.xml'),
         ]
 
-        faces_detected_results = []
-        for cascade_path in cascade_paths:
-            face_cascade = cv2.CascadeClassifier(cascade_path)
+
+        for rotation in [0, 2, -2, 4, -4, 6, -6, 8, -8, 10, -10, 20, -20, 30, -30, 40, -40, 50, -50, 60, -60, 70, -70, 80, -80, 180, -180, 175, -175, 170, -170, 160, -160, 150, -150, 140, -140, 130, -130, 120, -120, 110, -110, 100, -100, 0]:
+            faces_detected_results = []
             img = cv2.imread(self.image_name)
-            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-            _, img_extension = os.path.splitext(self.image_name)
-            gray_image_name = "images/" + str(uuid.uuid4()) + img_extension.lower()
-            cv2.imwrite(gray_image_name, gray)
-            black_and_white = cv2.equalizeHist(gray)
-            faces_detected = face_cascade.detectMultiScale(
-                black_and_white,
-                scaleFactor=1.55, minNeighbors=5,
-                minSize=(10, 10),
-                flags=cv2.CASCADE_SCALE_IMAGE
-            )
-            faces_detected_results.append(np.array(faces_detected))
+            img = rotate_image(img, rotation)
+            for cascade_path in cascade_paths:
+                face_cascade = cv2.CascadeClassifier(cascade_path)
+                gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                black_and_white = cv2.equalizeHist(gray)
+                height, width, channels = img.shape
+                min_size_height = int(height / 13)
+                min_size_width = int(width / 13)
+                size = min([min_size_height, min_size_width])
+                faces_detected = face_cascade.detectMultiScale(
+                    black_and_white,
+                    scaleFactor=1.45, minNeighbors=5,
+                    minSize=(size, size),
+                    flags=cv2.CASCADE_SCALE_IMAGE
+                )
+                if len(faces_detected) > 0:
+                    faces_detected_results.append(np.array(faces_detected))
+
+                faces_detected = face_cascade.detectMultiScale(
+                    black_and_white,
+                    scaleFactor=1.48, minNeighbors=6,
+                    minSize=(size, size),
+                    flags=cv2.CASCADE_SCALE_IMAGE
+                )
+                if len(faces_detected) > 0:
+                    faces_detected_results.append(np.array(faces_detected))
+                faces_detected = face_cascade.detectMultiScale(
+                    black_and_white,
+                    scaleFactor=1.55, minNeighbors=6,
+                    minSize=(size, size),
+                    flags=cv2.CASCADE_SCALE_IMAGE
+                )
+                if len(faces_detected) > 0:
+                    faces_detected_results.append(np.array(faces_detected))
+                faces_detected = face_cascade.detectMultiScale(
+                    black_and_white,
+                    scaleFactor=1.60, minNeighbors=6,
+                    minSize=(size, size),
+                    flags=cv2.CASCADE_SCALE_IMAGE
+                )
+                if len(faces_detected) > 0:
+                    faces_detected_results.append(np.array(faces_detected))
+                faces_detected = face_cascade.detectMultiScale(
+                    black_and_white,
+                    scaleFactor=1.70, minNeighbors=6,
+                    minSize=(size, size),
+                    flags=cv2.CASCADE_SCALE_IMAGE
+                )
+                if len(faces_detected) > 0:
+                    faces_detected_results.append(np.array(faces_detected))
+
+            if len(faces_detected_results) > 0:
+                break
         first_iteration = True
+        results = []
         for faces_detected_result in faces_detected_results:
             if first_iteration:
                 results = faces_detected_result
@@ -80,7 +125,12 @@ class Face:
         sorted_faces = sorted(results, key=lambda x: x[2] * x[3], reverse=True)
         faces = self.__remove_double_detection(sorted_faces)
         faces = self.__remove_containing_rectangles(faces)
+
         skin_brightness = []
+        _, img_extension = os.path.splitext(self.image_name)
+        gray_image_name = "images/" + str(uuid.uuid4()) + img_extension.lower()
+        if gray is not None:
+            cv2.imwrite(gray_image_name, gray)
         for x, y, w, h in faces:
             coordinates = {'x': x, 'y': y}
             sizes = {'w': w, 'h': h}
@@ -225,3 +275,12 @@ class Face:
                 retained_rectangles.append((x_i, y_i, w_i, h_i))
 
         return retained_rectangles
+
+
+def rotate_image(img, angle):
+    height, width = img.shape[:2]
+    center = (width // 2, height // 2)
+    rotation_matrix = cv2.getRotationMatrix2D(center, angle, 1.0)
+    rotated_image = cv2.warpAffine(img, rotation_matrix, (width, height))
+    return rotated_image
+
