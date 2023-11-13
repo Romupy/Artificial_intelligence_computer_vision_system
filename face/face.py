@@ -3,9 +3,33 @@ import cv2
 import uuid
 from statistics import median
 
+import numpy as np
+
 
 class Face:
+    """
+    Class for facial analysis.
+
+    This class provides methods for detecting faces in an image, analyzing
+    facial skin brightness, and determining the type of facial skin.
+
+    Attributes:
+    image_name (str): The file path of the image to be analyzed.
+
+    Methods:
+    face_detection(): Detects faces in an image and analyzes facial skin.
+    __skin_brightness_detection(coordinates, sizes, gray_image_name):
+        Detects facial skin brightness.
+    __skin_type_detection(result): Determines the type of facial skin.
+    __remove_double_detection(rectangles): Removes rectangles containing others.
+    """
     def __init__(self, image_name):
+        """
+        Initializes a Face object.
+
+        Keyword arguments::
+        image_name (str): The file path of the image to be analyzed.
+        """
         self.image_name = image_name
 
     def face_detection(self):
@@ -22,23 +46,42 @@ class Face:
         information about the facial skin.
         Example: {'Number_of_faces_detected': 2, 'facial_skin': [...]}
         """
-        cascade_path = os.path.abspath(
-            'face/classifiers/haarcascade_frontalface_default.xml'
-        )
-        face_cascade = cv2.CascadeClassifier(cascade_path)
-        img = cv2.imread(self.image_name)
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        _, img_extension = os.path.splitext(self.image_name)
-        gray_image_name = "images/" + str(uuid.uuid4()) + img_extension.lower()
-        cv2.imwrite(gray_image_name, gray)
-        black_and_white = cv2.equalizeHist(gray)
-        faces_detected = face_cascade.detectMultiScale(
-            black_and_white,
-            scaleFactor=1.45, minNeighbors=5,
-            minSize=(30, 30),
-            flags=cv2.CASCADE_SCALE_IMAGE
-        )
-        sorted_faces = sorted(faces_detected, key=lambda x: x[2] * x[3], reverse=True)
+        cascade_paths = [
+            os.path.abspath('face/classifiers/haarcascade_frontalface_default.xml'),
+            os.path.abspath('face/classifiers/haarcascade_frontalface_alt_tree.xml'),
+            os.path.abspath('face/classifiers/haarcascade_frontalface_alt2.xml'),
+            os.path.abspath('face/classifiers/haarcascade_profileface.xml'),
+        ]
+
+        faces_detected_results = []
+        for cascade_path in cascade_paths:
+            face_cascade = cv2.CascadeClassifier(cascade_path)
+            img = cv2.imread(self.image_name)
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            _, img_extension = os.path.splitext(self.image_name)
+            gray_image_name = "images/" + str(uuid.uuid4()) + img_extension.lower()
+            cv2.imwrite(gray_image_name, gray)
+            black_and_white = cv2.equalizeHist(gray)
+            faces_detected = face_cascade.detectMultiScale(
+                black_and_white,
+                scaleFactor=1.45, minNeighbors=5,
+                minSize=(10, 10),
+                flags=cv2.CASCADE_SCALE_IMAGE
+            )
+            faces_detected_results.append(np.array(faces_detected))
+        first_iteration = True
+        for faces_detected_result in faces_detected_results:
+            if first_iteration:
+                results = faces_detected_result
+                print(results)
+                first_iteration = False
+            else:
+                print(faces_detected_result)
+                if len(faces_detected_result) > 0:
+                    results = np.concatenate((results, faces_detected_result))
+                    print(results)
+        number_faces = self.__count_number_faces(results)
+        sorted_faces = sorted(results, key=lambda x: x[2] * x[3], reverse=True)
         faces = self.__remove_double_detection(sorted_faces)
         skin_brightness = []
         for x, y, w, h in faces:
@@ -50,7 +93,7 @@ class Face:
             )
             skin_brightness.append(skin_brightness_result)
         cv2.imwrite(self.image_name, img)
-        return {"Number_of_faces_detected": len(faces),
+        return {"Number_of_faces_detected": number_faces,
                 "facial_skin": skin_brightness}
 
     @staticmethod
@@ -147,6 +190,25 @@ class Face:
                             and y_i + h_i >= y_j + h_j):
                         is_contained = True
                         break
+
             if not is_contained:
                 retained_rectangles.append((x_i, y_i, w_i, h_i))
         return retained_rectangles
+
+    @staticmethod
+    def __count_number_faces(rectangles):
+        retained_rectangles = []
+        for i in range(len(rectangles)):
+            x_i, y_i, w_i, h_i = rectangles[i]
+            is_contained = False
+            for j in range(len(rectangles)):
+                if i != j:
+                    x_j, y_j, w_j, h_j = rectangles[j]
+                    if (x_i <= x_j and y_i <= y_j and x_i + w_i >= x_j + w_j
+                            and y_i + h_i >= y_j + h_j):
+                        is_contained = True
+                        break
+            if not is_contained:
+                retained_rectangles.append((x_i, y_i, w_i, h_i))
+        return len(retained_rectangles)
+
