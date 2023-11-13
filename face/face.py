@@ -37,7 +37,6 @@ class Face:
         {'scale_factor': 1.70, 'min_neighbors': 6}
     ]
     MIN_SIZE_RATIO = 13
-
     ROTATIONS = [0, 2, -2, 4, -4, 6, -6, 8, -8, 10, -10, 20, -20, 30, -30, 40,
                  -40, 50, -50, 60, -60, 70, -70, 80, -80, 180, -180, 175, -175,
                  170, -170, 160, -160, 150, -150, 140, -140, 130, -130, 120,
@@ -69,7 +68,6 @@ class Face:
         gray = None
         faces_detected_results = None
         img = None
-
         for rotation in self.ROTATIONS:
             faces_detected_results = []
             img = cv2.imread(self.image_name)
@@ -126,20 +124,20 @@ class Face:
     @staticmethod
     def __skin_brightness_detection(coordinates, sizes, gray_image_name):
         """
-       Method that detects facial skin brightness.
+        Method that detects facial skin brightness.
 
-       This method analyzes the brightness of facial skin in the specified
-       region of the grayscale image.
+        This method analyzes the brightness of facial skin in the specified
+        region of the grayscale image.
 
-       Keyword arguments:
-       coordinates (dict): Dictionary containing the 'x' and 'y' coordinates of
-       the region.
-       sizes (dict): Dictionary containing the width ('w') and height ('h') of
-       the region.
-       gray_image_name (str): The file path of the grayscale image to be
-       analyzed.
+        Keyword arguments:
+        coordinates (dict): Dictionary containing the 'x' and 'y' coordinates of
+        the region.
+        sizes (dict): Dictionary containing the width ('w') and height ('h') of
+        the region.
+        gray_image_name (str): The file path of the grayscale image to be
+        analyzed.
 
-       Returns:
+        Returns:
         dict: A dictionary containing the brightness of the facial skin in the
         specified region rounded to two decimal places and skin information.
         Example: {'skin_brightness': 0.75, 'skin_info': 'light skin'}
