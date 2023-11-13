@@ -64,7 +64,7 @@ class Face:
             black_and_white = cv2.equalizeHist(gray)
             faces_detected = face_cascade.detectMultiScale(
                 black_and_white,
-                scaleFactor=1.45, minNeighbors=5,
+                scaleFactor=1.55, minNeighbors=5,
                 minSize=(10, 10),
                 flags=cv2.CASCADE_SCALE_IMAGE
             )
@@ -73,14 +73,10 @@ class Face:
         for faces_detected_result in faces_detected_results:
             if first_iteration:
                 results = faces_detected_result
-                print(results)
                 first_iteration = False
             else:
-                print(faces_detected_result)
                 if len(faces_detected_result) > 0:
                     results = np.concatenate((results, faces_detected_result))
-                    print(results)
-        number_faces = self.__count_number_faces(results)
         sorted_faces = sorted(results, key=lambda x: x[2] * x[3], reverse=True)
         faces = self.__remove_double_detection(sorted_faces)
         skin_brightness = []
@@ -93,7 +89,7 @@ class Face:
             )
             skin_brightness.append(skin_brightness_result)
         cv2.imwrite(self.image_name, img)
-        return {"Number_of_faces_detected": number_faces,
+        return {"Number_of_faces_detected": len(faces),
                 "facial_skin": skin_brightness}
 
     @staticmethod
@@ -194,21 +190,3 @@ class Face:
             if not is_contained:
                 retained_rectangles.append((x_i, y_i, w_i, h_i))
         return retained_rectangles
-
-    @staticmethod
-    def __count_number_faces(rectangles):
-        retained_rectangles = []
-        for i in range(len(rectangles)):
-            x_i, y_i, w_i, h_i = rectangles[i]
-            is_contained = False
-            for j in range(len(rectangles)):
-                if i != j:
-                    x_j, y_j, w_j, h_j = rectangles[j]
-                    if (x_i <= x_j and y_i <= y_j and x_i + w_i >= x_j + w_j
-                            and y_i + h_i >= y_j + h_j):
-                        is_contained = True
-                        break
-            if not is_contained:
-                retained_rectangles.append((x_i, y_i, w_i, h_i))
-        return len(retained_rectangles)
-
