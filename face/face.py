@@ -79,6 +79,7 @@ class Face:
                     results = np.concatenate((results, faces_detected_result))
         sorted_faces = sorted(results, key=lambda x: x[2] * x[3], reverse=True)
         faces = self.__remove_double_detection(sorted_faces)
+        faces = self.__remove_containing_rectangles(faces)
         skin_brightness = []
         for x, y, w, h in faces:
             coordinates = {'x': x, 'y': y}
@@ -189,4 +190,38 @@ class Face:
 
             if not is_contained:
                 retained_rectangles.append((x_i, y_i, w_i, h_i))
+        return retained_rectangles
+
+    @staticmethod
+    def __remove_containing_rectangles(rectangles):
+        """
+        Method that removes rectangles containing others from the list.
+
+        This method takes a list of rectangles represented as tuples (x, y, w, h).
+        It removes rectangles that contain other rectangles, even if there is partial overlap.
+
+        Keyword arguments:
+        rectangles -- List of rectangles to be processed.
+                      Represented as tuples (x, y, w, h).
+
+        Returns:
+        List -- List of rectangles that do not contain any other rectangles.
+        """
+        retained_rectangles = []
+
+        for i in range(len(rectangles)):
+            x_i, y_i, w_i, h_i = rectangles[i]
+            is_contained_by_other = any(
+                (
+                    x_i < x_r + w_r
+                    and x_i + w_i > x_r
+                    and y_i < y_r + h_r
+                    and y_i + h_i > y_r
+                )
+                for (x_r, y_r, w_r, h_r) in retained_rectangles
+            )
+
+            if not is_contained_by_other:
+                retained_rectangles.append((x_i, y_i, w_i, h_i))
+
         return retained_rectangles
