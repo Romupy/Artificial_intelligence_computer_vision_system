@@ -63,7 +63,7 @@ class Face:
         Returns:
         dict -- Dictionary containing the number of faces detected and
         information about the facial skin.
-        Example: {'Number_of_faces_detected': 2, 'facial_skin': [...]}
+        Example: {'Nnmber_of_faces_detected': 2, 'facial_skin': [...]}
         """
         gray = None
         faces_detected_results = None
@@ -118,7 +118,7 @@ class Face:
             )
             skin_brightness.append(skin_brightness_result)
         cv2.imwrite(self.image_name, img)
-        return {"Number_of_faces_detected": len(faces),
+        return {"number_of_faces_detected": len(faces),
                 "facial_skin": skin_brightness}
 
     @staticmethod
