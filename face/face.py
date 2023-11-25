@@ -130,8 +130,8 @@ class Face:
         region of the grayscale image.
 
         Keyword arguments:
-        coordinates (dict): Dictionary containing the 'x' and 'y' coordinates of
-        the region.
+        coordinates (dict): Dictionary containing the 'x' and 'y' coordinates
+        of the region.
         sizes (dict): Dictionary containing the width ('w') and height ('h') of
         the region.
         gray_image_name (str): The file path of the grayscale image to be
