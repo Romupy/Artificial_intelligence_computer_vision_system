@@ -7,7 +7,7 @@ from rest_framework.test import APITestCase
 
 class FaceViewTests(APITestCase):
     def test_image_with_1_face(self):
-        url = reverse('face')
+        url = reverse('face_analysis')
         image_data = {
             'image': open(
                 os.path.abspath('face/test_images/image_with_1_face.jpg'), 'rb'
@@ -23,7 +23,7 @@ class FaceViewTests(APITestCase):
         )
 
     def test_image_with_2_faces(self):
-        url = reverse('face')
+        url = reverse('face_analysis')
         image_data = {
             'image': open(
                 os.path.abspath('face/test_images/image_with_2_faces.jpg'),
@@ -40,7 +40,7 @@ class FaceViewTests(APITestCase):
         )
 
     def test_image_without_face(self):
-        url = reverse('face')
+        url = reverse('face_analysis')
         image_data = {
             'image': open(
                 os.path.abspath('face/test_images/image_without_face.jpg'),

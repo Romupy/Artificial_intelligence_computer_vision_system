@@ -5,7 +5,7 @@ from statistics import median
 import numpy as np
 
 
-class Face:
+class FaceAnalysisAlgorithm:
     """
     Class for facial analysis.
 
@@ -163,7 +163,7 @@ class Face:
                     int(img[coords_pixel['y'], coords_pixel['x']][0])
                 )
         result = round(((100 / 255) * median(brightness_data)) / 100, 2)
-        skin_info = Face.__skin_type_detection(result)
+        skin_info = FaceAnalysisAlgorithm.__skin_type_detection(result)
         return {"skin_brightness": result, "skin_info": skin_info}
 
     @staticmethod

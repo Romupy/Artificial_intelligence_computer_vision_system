@@ -1,5 +1,5 @@
 from django.db import models
-from .face import Face
+from .face_analysis_algorithm import FaceAnalysisAlgorithm
 
 
 class Image(models.Model):
@@ -9,5 +9,5 @@ class Image(models.Model):
         return {"image_name": self.image.name}
 
     def analyze(self):
-        face = Face(self.image.name)
-        return face.face_detection()
+        face_analysis_algorithm = FaceAnalysisAlgorithm(self.image.name)
+        return face_analysis_algorithm.face_detection()

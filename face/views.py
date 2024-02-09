@@ -6,7 +6,7 @@ from .serializers import ImageSerializer
 
 
 @api_view(['POST'])
-def face(request):
+def face_analysis(request):
     """
     View that enables image reception and recording
 
